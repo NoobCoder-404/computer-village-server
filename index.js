@@ -22,7 +22,7 @@ async function run() {
     try {
         const productCollection = client.db('computerVillage').collection('products');
         const usersCollection = client.db('computerVillage').collection('users');
-        const bookingCollection = client.db('computerVillage').collection('booking');
+        const orderCollection = client.db('computerVillage').collection('orders');
 
         app.put('/user/:email', async (req, res) => {
             const { email } = req.query;
@@ -66,15 +66,34 @@ async function run() {
                     email: req.query.email,
                 };
             }
-            const cursor = bookingCollection.find(query);
+            const cursor = orderCollection.find(query);
             const orders = await cursor.toArray();
             res.send(orders);
         });
 
-        app.post('/bookings', async (req, res) => {
-            const booking = req.body;
-            console.log(booking);
-            const result = await bookingCollection.insertOne(booking);
+        app.post('/orders', async (req, res) => {
+            const order = req.body;
+            const result = await orderCollection.insertOne(order);
+            res.send(result);
+        });
+
+        app.patch('/orders/:id', async (req, res) => {
+            const { id } = req.params;
+            const { status } = req.body;
+            const query = { _id: ObjectId(id) };
+            const updatedDoc = {
+                $set: {
+                    status,
+                },
+            };
+            const result = await orderCollection.updateOne(query, updatedDoc);
+            res.send(result);
+        });
+
+        app.delete('/orders/:id', async (req, res) => {
+            const { id } = req.params;
+            const query = { _id: ObjectId(id) };
+            const result = await orderCollection.deleteOne(query);
             res.send(result);
         });
     } finally {

@@ -22,6 +22,7 @@ async function run() {
     try {
         const productCollection = client.db('computerVillage').collection('products');
         const usersCollection = client.db('computerVillage').collection('users');
+        const bookingCollection = client.db('computerVillage').collection('booking');
 
         app.put('/user/:email', async (req, res) => {
             const { email } = req.query;
@@ -55,6 +56,13 @@ async function run() {
             const query = { _id: ObjectId(id) };
             const product = await productCollection.findOne(query);
             res.send(product);
+        });
+
+        app.post('/bookings', async (req, res) => {
+            const booking = req.body;
+            console.log(booking);
+            const result = await bookingCollection.insertOne(booking);
+            res.send(result);
         });
     } finally {
         // await client.close();

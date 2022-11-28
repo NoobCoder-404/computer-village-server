@@ -2,6 +2,7 @@
 const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const Port = process.env.Port || 5000;
@@ -20,6 +21,27 @@ const client = new MongoClient(uri, {
 async function run() {
     try {
         const productCollection = client.db('computerVillage').collection('products');
+        const usersCollection = client.db('computerVillage').collection('users');
+
+        app.put('/user/:email', async (req, res) => {
+            const { email } = req.query;
+            const user = req.body;
+            const filter = {
+                email,
+            };
+            const options = { upsert: true };
+
+            const updateDoc = {
+                $set: user,
+            };
+            const result = await usersCollection.updateOne(filter, updateDoc, options);
+            console.log(result);
+
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+                expiresIn: '1d',
+            });
+            res.send({ result, token });
+        });
 
         app.get('/products', async (req, res) => {
             const query = {};
@@ -28,7 +50,7 @@ async function run() {
             res.send(products);
         });
 
-        app.get('/products/:id', async (req, res) => {
+        app.get('/product/:id', async (req, res) => {
             const { id } = req.params;
             const query = { _id: ObjectId(id) };
             const product = await productCollection.findOne(query);
